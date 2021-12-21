@@ -1,0 +1,1 @@
+{"required_files": [{"name": "cifar10", "source_uri": "data://algorithmia_admin/cifar10_models/cifar10-1125a804-39c0-4685-a93d-c6b5c1a2309f.t7", "metadata": {"dataset_md5_checksum": "8832592dafff8c2e940e83d54099590aaa35b5f8"}, "date_modified": "1640107127.6581109"}], "optional_files": []}
