@@ -26,7 +26,7 @@ def process_image(image_url, client):
 def load(state):
     composite = th.load(state.get_model('cifar10'))
     model, classes = composite
-    state['model'] = model
+    state['model'] = model.cuda()
     state['classes'] = classes
     return state
 
@@ -37,8 +37,10 @@ def apply(input, state):
     Returns the product as the output.
     """
     image_data = process_image(input, state.client)
+    image_data = image_data.cuda()
     preds = state['model'](image_data)
     _, predicted = th.max(preds.data, 1)
+    predicted = predicted.cpu()
     output = []
     for j in range(len(predicted)):
         prediction = {"class": state['classes'][predicted[j]]}
