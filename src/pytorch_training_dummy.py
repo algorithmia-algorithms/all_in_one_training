@@ -1,4 +1,4 @@
-import Algorithmia
+from Algorithmia import ADK
 import torch as th
 from PIL import Image
 from torchvision import transforms
@@ -9,6 +9,7 @@ def process_image(image_url, client):
     local_image = client.file(image_url).getFile().name
     transform = transforms.Compose(
         [transforms.ToTensor(),
+         transforms.CenterCrop(32),
          transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
     img = Image.open(local_image)
     img.load()
@@ -17,12 +18,16 @@ def process_image(image_url, client):
         sqrWidth = np.ceil(np.sqrt(img.size[0] * img.size[1])).astype(int)
         image_data = transform(img.resize((sqrWidth, sqrWidth)))
     else:
-        image_data = transform(img)
+        image_data = transform(img).unsqueeze()
+    image_data = image_data.unsqueeze(dim=0)
     return image_data
 
 
 def load(state):
-    state['classes'], state['model'] = th.load(state.get_model('cifar10'))
+    composite = th.load(state.get_model('cifar10'))
+    model, classes = composite
+    state['model'] = model
+    state['classes'] = classes
     return state
 
 
@@ -35,7 +40,11 @@ def apply(input, state):
     preds = state['model'](image_data)
     _, predicted = th.max(preds.data, 1)
     output = []
-    for j in range(len(state['classes'])):
-        prediction = {"class": state['classes'][preds[j]]}
+    for j in range(len(predicted)):
+        prediction = {"class": state['classes'][predicted[j]]}
         output.append(prediction)
     return output
+
+
+algo = ADK(apply, load)
+algo.init("data://algorithmia_admin/DeepFashion_1/willow_example.jpeg")
